@@ -1,5 +1,8 @@
 #!/bin/bash
 
+tmpdir=$(mktemp -d)
+cd $tmpdir
+
 sudo apt-get -y install wget sudo
 
 # gh
@@ -10,15 +13,15 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubc
 wget -nv -O- https://apt.releases.commonfate.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/common-fate-linux.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/common-fate-linux.gpg] https://apt.releases.commonfate.io stable main" | sudo tee /etc/apt/sources.list.d/common-fate.list
 
+curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
+sudo bash nodesource_setup.sh
 
 sudo apt-get update
 sudo apt-get upgrade -y
-sudo apt-get install -y gh granted
+sudo apt-get install -y gh granted nodejs
 
 
 # aws cli
-tmpdir=$(mktemp -d)
-cd $tmpdir
 curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
 sudo ./aws/install

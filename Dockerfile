@@ -11,6 +11,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     rm -f /tmp/packages.txt
 
+ARG CACHE_BUSTER=1
 COPY install.sh /tmp/install.sh
 RUN chmod +x /tmp/install.sh
 

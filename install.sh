@@ -13,8 +13,12 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubc
 wget -nv -O- https://apt.releases.commonfate.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/common-fate-linux.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/common-fate-linux.gpg] https://apt.releases.commonfate.io stable main" | sudo tee /etc/apt/sources.list.d/common-fate.list
 
+# node 20
 curl -fsSL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
 sudo bash nodesource_setup.sh
+
+# uv
+curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
 
 sudo apt-get update
 sudo apt-get upgrade -y
@@ -28,5 +32,6 @@ sudo ./aws/install
 
 # claude code
 sudo npm install -g @anthropic-ai/claude-code
+sudo npm install -g claude-flow@alpha
 
 sudo rm -rf /var/lib/apt/lists/*

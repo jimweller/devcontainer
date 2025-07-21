@@ -19,3 +19,4 @@ yq
 zip
 unzip
 npm
+sqlite3

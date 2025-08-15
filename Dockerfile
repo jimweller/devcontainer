@@ -22,26 +22,48 @@ RUN apt-get update && \
 FROM base AS aptsources
 
 RUN set -eux && \
-    # Add repositories with GPG verification
+    # Add apt repositories with GPG verification
+    # gh cli
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
         gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
         tee /etc/apt/sources.list.d/github-cli.list && \
     \
+    # node
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
         gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | \
         tee /etc/apt/sources.list.d/nodesource.list && \
     \
+    # azure-cli
     curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
         gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
     echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ jammy main" | \
         tee /etc/apt/sources.list.d/azure-cli.list && \
     \
+    # common-fate granted/assume
     curl -fsSL https://apt.releases.commonfate.io/gpg | \
         gpg --dearmor -o /usr/share/keyrings/common-fate-linux.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/common-fate-linux.gpg] https://apt.releases.commonfate.io stable main" | \
-        tee /etc/apt/sources.list.d/common-fate.list
+        tee /etc/apt/sources.list.d/common-fate.list && \
+    \
+    # OpenTofu
+    curl -fsSL https://get.opentofu.org/opentofu.gpg | \
+        tee /etc/apt/keyrings/opentofu.gpg >/dev/null && \
+    curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | \
+        gpg --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg && \
+    chmod a+r /etc/apt/keyrings/opentofu.gpg /etc/apt/keyrings/opentofu-repo.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
+        tee /etc/apt/sources.list.d/opentofu.list  && \
+    echo "deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
+        tee -a /etc/apt/sources.list.d/opentofu.list  && \
+    chmod a+r /etc/apt/sources.list.d/opentofu.list && \
+    \
+    # Terraform
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | \
+      gpg --dearmor -o /etc/apt/keyrings/hashicorp-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | \
+      tee /etc/apt/sources.list.d/hashicorp.list
 
 # 3: Install all apt packages
 FROM aptsources AS aptinstalls
@@ -60,11 +82,15 @@ RUN --mount=type=cache,target=/var/cache/apt \
         less \
         nano \
         jq \
+        yq \
         zip \
         sqlite3 \
         gh \
         nodejs \
         azure-cli \
+        python3-pygments \
+        tofu \
+        terraform \
         granted && \
     rm -rf /var/lib/apt/lists/*
 
@@ -109,17 +135,21 @@ RUN set -eux && \
     # UV installer
     curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh && \
     \
-    # yq (YAML processor)
-    YQ_VERSION="v4.40.5" && \
-    curl -L "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_arm64" -o /usr/local/bin/yq && \
-    chmod +x /usr/local/bin/yq && \
-    \
     # AWS CLI v2 (for ARM64)
     AWS_CLI_VERSION="2.15.0" && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWS_CLI_VERSION}.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install && \
-    rm -rf aws awscliv2.zip
+    rm -rf aws awscliv2.zip && \
+    \
+    # terragrunt
+    OS="linux" && \
+    ARCH="arm64" && \
+    VERSION="v0.69.10" && \
+    BINARY_NAME="terragrunt_${OS}_${ARCH}" && \
+    curl -sL "https://github.com/gruntwork-io/terragrunt/releases/download/${VERSION}/${BINARY_NAME}" -o /usr/local/bin/terragrunt && \
+    chmod +x /usr/local/bin/terragrunt
+
 
 # Create non-root user with appropriate privileges for development
 ARG USERNAME=vscode

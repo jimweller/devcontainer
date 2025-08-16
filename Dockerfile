@@ -63,7 +63,19 @@ RUN set -eux && \
     curl -fsSL https://apt.releases.hashicorp.com/gpg | \
       gpg --dearmor -o /etc/apt/keyrings/hashicorp-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | \
-      tee /etc/apt/sources.list.d/hashicorp.list
+      tee /etc/apt/sources.list.d/hashicorp.list && \
+    \
+    # kubectl
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | \
+      gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | \
+      tee /etc/apt/sources.list.d/kubernetes.list && \
+    \
+    # helm
+    curl -fsSL https://baltocdn.com/helm/signing.asc | \
+      gpg --dearmor -o /etc/apt/keyrings/helm.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | \
+      tee /etc/apt/sources.list.d/helm.list
 
 # 3: Install all apt packages
 FROM aptsources AS aptinstalls
@@ -91,6 +103,9 @@ RUN --mount=type=cache,target=/var/cache/apt \
         python3-pygments \
         tofu \
         terraform \
+        kubectl \
+        kubectx \
+        helm \
         granted && \
     rm -rf /var/lib/apt/lists/*
 
@@ -150,7 +165,6 @@ RUN set -eux && \
     curl -sL "https://github.com/gruntwork-io/terragrunt/releases/download/${VERSION}/${BINARY_NAME}" -o /usr/local/bin/terragrunt && \
     chmod +x /usr/local/bin/terragrunt
 
-
 # Create non-root user with appropriate privileges for development
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -165,7 +179,7 @@ RUN set -eux && \
     else \
         USER_GROUP=$EXISTING_GROUP; \
     fi && \
-    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
+    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/zsh && \
     echo "$USERNAME ALL=(ALL) NOPASSWD:/usr/bin/apt-get,/usr/bin/docker,/usr/bin/systemctl" > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 

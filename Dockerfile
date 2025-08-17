@@ -106,6 +106,10 @@ RUN --mount=type=cache,target=/var/cache/apt \
         kubectl \
         kubectx \
         helm \
+        zoxide \
+        eza \
+        bat \
+        safe-rm \
         granted && \
     rm -rf /var/lib/apt/lists/*
 
@@ -165,7 +169,9 @@ RUN set -eux && \
     curl -sL "https://github.com/gruntwork-io/terragrunt/releases/download/${VERSION}/${BINARY_NAME}" -o /usr/local/bin/terragrunt && \
     chmod +x /usr/local/bin/terragrunt
 
-# Create non-root user with appropriate privileges for development
+# 6: Create non-root user with appropriate privileges for development
+FROM custom AS user
+
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
@@ -183,10 +189,21 @@ RUN set -eux && \
     echo "$USERNAME ALL=(ALL) NOPASSWD:/usr/bin/apt-get,/usr/bin/docker,/usr/bin/systemctl" > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
+# 7: Custom JIM tweaks
+FROM user AS tweaks
+
+# mac & linux call batcat different things, make both work
+RUN ln -s /bin/batcat /bin/bat
+
+# 8: Docker Health Check
+FROM tweaks AS healthcheck
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD ps aux | grep -v grep | grep -q sleep || exit 1
 
+
+# 9: Finish
+FROM tweaks AS finish
 WORKDIR /home/$USERNAME
 USER $USERNAME
 

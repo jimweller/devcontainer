@@ -11,6 +11,7 @@
   // Extract secrets after dotfiles installation
   "postAttachCommand": "~/.config/dotfiles/scripts/secrets.sh open",
 
+  // tiny hack to make sure the first terminal is a fully configured shell
   "features": {
     "./features/fix-zsh": {}
   }

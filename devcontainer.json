@@ -12,9 +12,6 @@
   "postAttachCommand": "~/.config/dotfiles/scripts/secrets.sh open",
 
   "features": {
-    "./features/fix-zsh": {
-      "settingsTemplate": "/workspace/.devcontainer/roo/roo-settings.json",
-      "outputPath": "/tmp/roo-settings.json"
-    }
+    "./features/fix-zsh": {}
   }
 }

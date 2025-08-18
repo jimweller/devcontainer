@@ -1,20 +1,20 @@
 {
-	"name": "0jimbox",
-	"image": "0jimbox"
+  "name": "0jimbox",
+  "image": "0jimbox",
 
+  // Pass the Docker-format secrets file directly + use host networking for corporate firewall
+  "runArgs": [
+    "--env-file", "${localEnv:HOME}/.secrets/dotfiles_docker.env",
+    "--network=host"
+  ],
 
-  // I have global features in settings.json. So this would be additional features
-  // "features": {},
+  // Extract secrets after dotfiles installation
+  "postAttachCommand": "~/.config/dotfiles/scripts/secrets.sh open",
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "uname -a",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+  "features": {
+    "./features/fix-zsh": {
+      "settingsTemplate": "/workspace/.devcontainer/roo/roo-settings.json",
+      "outputPath": "/tmp/roo-settings.json"
+    }
+  }
 }

@@ -75,7 +75,10 @@ RUN set -eux && \
     curl -fsSL https://baltocdn.com/helm/signing.asc | \
       gpg --dearmor -o /etc/apt/keyrings/helm.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | \
-      tee /etc/apt/sources.list.d/helm.list
+      tee /etc/apt/sources.list.d/helm.list && \
+    \
+    # tenv
+    curl -1sLf 'https://dl.cloudsmith.io/public/tofuutils/tenv/cfg/setup/bash.deb.sh' | bash
 
 # 3: Install all apt packages
 FROM aptsources AS aptinstalls
@@ -101,8 +104,9 @@ RUN --mount=type=cache,target=/var/cache/apt \
         nodejs \
         azure-cli \
         python3-pygments \
-        tofu \
-        terraform \
+        # tofu \
+        # terraform \
+        tenv \
         kubectl \
         kubectx \
         helm \
@@ -159,15 +163,16 @@ RUN set -eux && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWS_CLI_VERSION}.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install && \
-    rm -rf aws awscliv2.zip && \
-    \
+    rm -rf aws awscliv2.zip 
+    # && \
+    # \
     # terragrunt
-    OS="linux" && \
-    ARCH="arm64" && \
-    VERSION="v0.69.10" && \
-    BINARY_NAME="terragrunt_${OS}_${ARCH}" && \
-    curl -sL "https://github.com/gruntwork-io/terragrunt/releases/download/${VERSION}/${BINARY_NAME}" -o /usr/local/bin/terragrunt && \
-    chmod +x /usr/local/bin/terragrunt
+    # OS="linux" && \
+    # ARCH="arm64" && \
+    # VERSION="v0.69.10" && \
+    # BINARY_NAME="terragrunt_${OS}_${ARCH}" && \
+    # curl -sL "https://github.com/gruntwork-io/terragrunt/releases/download/${VERSION}/${BINARY_NAME}" -o /usr/local/bin/terragrunt && \
+    # chmod +x /usr/local/bin/terragrunt
 
 # 6: Create non-root user with appropriate privileges for development
 FROM custom AS user

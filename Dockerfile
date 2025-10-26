@@ -23,17 +23,17 @@ FROM base AS aptsources
 
 RUN set -eux && \
     # Add apt repositories with GPG verification
+    # docker
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+        gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(grep -oP '(?<=VERSION_CODENAME=).*' /etc/os-release) stable" | \
+        tee /etc/apt/sources.list.d/docker.list && \
+    \
     # gh cli
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
         gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
         tee /etc/apt/sources.list.d/github-cli.list && \
-    \
-    # node
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
-        gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | \
-        tee /etc/apt/sources.list.d/nodesource.list && \
     \
     # azure-cli
     curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
@@ -71,12 +71,6 @@ RUN set -eux && \
     echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | \
       tee /etc/apt/sources.list.d/kubernetes.list && \
     \
-    # helm
-    curl -fsSL https://baltocdn.com/helm/signing.asc | \
-      gpg --dearmor -o /etc/apt/keyrings/helm.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | \
-      tee /etc/apt/sources.list.d/helm.list && \
-    \
     # tenv
     curl -1sLf 'https://dl.cloudsmith.io/public/tofuutils/tenv/cfg/setup/bash.deb.sh' | bash
 
@@ -100,8 +94,8 @@ RUN --mount=type=cache,target=/var/cache/apt \
         yq \
         zip \
         sqlite3 \
+        docker-ce-cli \
         gh \
-        nodejs \
         azure-cli \
         python3-pygments \
         # tofu \
@@ -109,7 +103,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
         tenv \
         kubectl \
         kubectx \
-        helm \
         zoxide \
         eza \
         bat \
@@ -148,13 +141,10 @@ RUN set -eux && \
           /var/cache/apt/archives/lock \
           /var/lib/apt/lists/lock
 
-# 5: Custom tools (npm + direct downloads)
+# 5: Install asdf binary and other tools (except npm)
 FROM aptupgrade AS custom
 
 RUN set -eux && \
-    # npm globals (nodejs now available from aptinstalls)
-    npm install -g @anthropic-ai/claude-code@latest && \
-    \
     # UV installer
     curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh && \
     \
@@ -163,19 +153,54 @@ RUN set -eux && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWS_CLI_VERSION}.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install && \
-    rm -rf aws awscliv2.zip 
-    # && \
-    # \
-    # terragrunt
-    # OS="linux" && \
-    # ARCH="arm64" && \
-    # VERSION="v0.69.10" && \
-    # BINARY_NAME="terragrunt_${OS}_${ARCH}" && \
-    # curl -sL "https://github.com/gruntwork-io/terragrunt/releases/download/${VERSION}/${BINARY_NAME}" -o /usr/local/bin/terragrunt && \
-    # chmod +x /usr/local/bin/terragrunt
+    rm -rf aws awscliv2.zip && \
+    \
+    # asdf version manager - download pre-built binary
+    ASDF_VERSION="v0.18.0" && \
+    ASDF_ARCH="arm64" && \
+    curl -fsSL "https://github.com/asdf-vm/asdf/releases/download/${ASDF_VERSION}/asdf-${ASDF_VERSION}-linux-${ASDF_ARCH}.tar.gz" | \
+    tar -xz -C /usr/local/bin && \
+    chmod +x /usr/local/bin/asdf
+
+# 5.5: Install asdf plugins and tools (pre-staged in image)
+FROM custom AS asdftools
+
+# Set asdf environment
+ENV ASDF_DATA_DIR="/opt/asdf"
+ENV PATH="/opt/asdf/shims:${PATH}"
+
+# Copy asdf configuration files
+COPY manifests/asdf-plugins.txt /tmp/asdf-plugins.txt
+COPY dotfiles/asdf-tool-versions /tmp/.tool-versions
+
+# Install plugins and tools
+RUN set -eux && \
+    # Install each plugin from manifest
+    while IFS= read -r line || [[ -n "$line" ]]; do \
+        [[ -z "$line" ]] && continue; \
+        [[ "$line" =~ ^[[:space:]]*# ]] && continue; \
+        plugin_name=$(echo "$line" | awk '{print $1}'); \
+        plugin_url=$(echo "$line" | awk '{print $2}'); \
+        echo "Installing asdf plugin: $plugin_name from $plugin_url"; \
+        asdf plugin add "$plugin_name" "$plugin_url" || true; \
+    done < /tmp/asdf-plugins.txt && \
+    \
+    # Install tools from .tool-versions
+    cd /tmp && \
+    asdf install && \
+    \
+    # Cleanup temporary files
+    rm -f /tmp/asdf-plugins.txt /tmp/.tool-versions
+
+# 5.6: Install npm globals using asdf nodejs
+FROM asdftools AS customtools
+
+RUN set -eux && \
+    # npm globals (nodejs now available from asdf)
+    npm install -g @anthropic-ai/claude-code@latest
 
 # 6: Create non-root user with appropriate privileges for development
-FROM custom AS user
+FROM customtools AS user
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -191,6 +216,9 @@ RUN set -eux && \
         USER_GROUP=$EXISTING_GROUP; \
     fi && \
     useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/zsh && \
+    # Add user to docker group for socket access
+    groupadd -f docker && \
+    usermod -aG docker $USERNAME && \
     echo "$USERNAME ALL=(ALL) NOPASSWD:/usr/bin/apt-get,/usr/bin/docker,/usr/bin/systemctl" > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 

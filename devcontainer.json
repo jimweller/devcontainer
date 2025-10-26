@@ -8,6 +8,11 @@
     "--network=host"
   ],
 
+  // Mount assets directory for auto-refreshed AWS credentials
+  "mounts": [
+    "source=${localEnv:HOME}/assets,target=/home/vscode/assets,type=bind,readonly"
+  ],
+
   // Extract secrets after dotfiles installation
   "postAttachCommand": "~/.config/dotfiles/scripts/secrets.sh open",
 

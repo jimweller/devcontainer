@@ -35,41 +35,41 @@ RUN set -eux && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
         tee /etc/apt/sources.list.d/github-cli.list && \
     \
-    # azure-cli
-    curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
-        gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
-    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ jammy main" | \
-        tee /etc/apt/sources.list.d/azure-cli.list && \
+    # azure-cli - Now managed by asdf
+    # curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
+    #     gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
+    # echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ jammy main" | \
+    #     tee /etc/apt/sources.list.d/azure-cli.list && \
     \
-    # common-fate granted/assume
-    curl -fsSL https://apt.releases.commonfate.io/gpg | \
-        gpg --dearmor -o /usr/share/keyrings/common-fate-linux.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/common-fate-linux.gpg] https://apt.releases.commonfate.io stable main" | \
-        tee /etc/apt/sources.list.d/common-fate.list && \
+    # common-fate granted/assume - Now managed by asdf
+    # curl -fsSL https://apt.releases.commonfate.io/gpg | \
+    #     gpg --dearmor -o /usr/share/keyrings/common-fate-linux.gpg && \
+    # echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/common-fate-linux.gpg] https://apt.releases.commonfate.io stable main" | \
+    #     tee /etc/apt/sources.list.d/common-fate.list && \
     \
-    # OpenTofu
-    curl -fsSL https://get.opentofu.org/opentofu.gpg | \
-        tee /etc/apt/keyrings/opentofu.gpg >/dev/null && \
-    curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | \
-        gpg --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg && \
-    chmod a+r /etc/apt/keyrings/opentofu.gpg /etc/apt/keyrings/opentofu-repo.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
-        tee /etc/apt/sources.list.d/opentofu.list  && \
-    echo "deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
-        tee -a /etc/apt/sources.list.d/opentofu.list  && \
-    chmod a+r /etc/apt/sources.list.d/opentofu.list && \
+    # OpenTofu - Not needed, using tenv
+    # curl -fsSL https://get.opentofu.org/opentofu.gpg | \
+    #     tee /etc/apt/keyrings/opentofu.gpg >/dev/null && \
+    # curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | \
+    #     gpg --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg && \
+    # chmod a+r /etc/apt/keyrings/opentofu.gpg /etc/apt/keyrings/opentofu-repo.gpg && \
+    # echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
+    #     tee /etc/apt/sources.list.d/opentofu.list  && \
+    # echo "deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | \
+    #     tee -a /etc/apt/sources.list.d/opentofu.list  && \
+    # chmod a+r /etc/apt/sources.list.d/opentofu.list && \
     \
-    # Terraform
-    curl -fsSL https://apt.releases.hashicorp.com/gpg | \
-      gpg --dearmor -o /etc/apt/keyrings/hashicorp-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | \
-      tee /etc/apt/sources.list.d/hashicorp.list && \
+    # Terraform - Not needed, using tenv
+    # curl -fsSL https://apt.releases.hashicorp.com/gpg | \
+    #   gpg --dearmor -o /etc/apt/keyrings/hashicorp-archive-keyring.gpg && \
+    # echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | \
+    #   tee /etc/apt/sources.list.d/hashicorp.list && \
     \
-    # kubectl
-    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | \
-      gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
-    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | \
-      tee /etc/apt/sources.list.d/kubernetes.list && \
+    # kubectl - Now managed by asdf
+    # curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | \
+    #   gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
+    # echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | \
+    #   tee /etc/apt/sources.list.d/kubernetes.list && \
     \
     # tenv
     curl -1sLf 'https://dl.cloudsmith.io/public/tofuutils/tenv/cfg/setup/bash.deb.sh' | bash
@@ -90,24 +90,26 @@ RUN --mount=type=cache,target=/var/cache/apt \
         htop \
         less \
         nano \
-        jq \
-        yq \
+        # jq \              # Now managed by asdf
+        # yq \              # Now managed by asdf
         zip \
         sqlite3 \
         docker-ce-cli \
         gh \
-        azure-cli \
+        # azure-cli \       # Now managed by asdf
         python3-pygments \
+        python3.12-venv \
         # tofu \
         # terraform \
         tenv \
-        kubectl \
+        # kubectl \         # Now managed by asdf
         kubectx \
         zoxide \
         eza \
         bat \
         safe-rm \
-        granted && \
+        # granted \         # Now managed by asdf
+        && \
     rm -rf /var/lib/apt/lists/*
 
 # 4: System updates and comprehensive cleanup
@@ -148,12 +150,12 @@ RUN set -eux && \
     # UV installer
     curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh && \
     \
-    # AWS CLI v2 (for ARM64)
-    AWS_CLI_VERSION="2.15.0" && \
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWS_CLI_VERSION}.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && \
-    ./aws/install && \
-    rm -rf aws awscliv2.zip && \
+    # AWS CLI v2 (for ARM64) - Now managed by asdf
+    # AWS_CLI_VERSION="2.15.0" && \
+    # curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWS_CLI_VERSION}.zip" -o "awscliv2.zip" && \
+    # unzip awscliv2.zip && \
+    # ./aws/install && \
+    # rm -rf aws awscliv2.zip && \
     \
     # asdf version manager - download pre-built binary
     ASDF_VERSION="v0.18.0" && \
@@ -169,18 +171,18 @@ FROM custom AS asdftools
 ENV ASDF_DATA_DIR="/opt/asdf"
 ENV PATH="/opt/asdf/shims:${PATH}"
 
-# Copy asdf configuration files
+# Copy asdf configuration files (build context is dotfiles root)
 COPY manifests/asdf-plugins.txt /tmp/asdf-plugins.txt
 COPY dotfiles/asdf-tool-versions /tmp/.tool-versions
 
 # Install plugins and tools
-RUN set -eux && \
+RUN bash -c 'set -eux && \
     # Install each plugin from manifest
     while IFS= read -r line || [[ -n "$line" ]]; do \
         [[ -z "$line" ]] && continue; \
         [[ "$line" =~ ^[[:space:]]*# ]] && continue; \
-        plugin_name=$(echo "$line" | awk '{print $1}'); \
-        plugin_url=$(echo "$line" | awk '{print $2}'); \
+        plugin_name=$(echo "$line" | awk "{print \$1}"); \
+        plugin_url=$(echo "$line" | awk "{print \$2}"); \
         echo "Installing asdf plugin: $plugin_name from $plugin_url"; \
         asdf plugin add "$plugin_name" "$plugin_url" || true; \
     done < /tmp/asdf-plugins.txt && \
@@ -189,15 +191,26 @@ RUN set -eux && \
     cd /tmp && \
     asdf install && \
     \
+    # Set nodejs version globally (creates ~/.tool-versions)
+    NODEJS_VERSION=$(grep "^nodejs" /tmp/.tool-versions | awk "{print \$2}") && \
+    echo "nodejs $NODEJS_VERSION" > ~/.tool-versions && \
+    \
+    # Verify nodejs and npm are available
+    asdf reshim nodejs && \
+    which node && \
+    which npm && \
+    node --version && \
+    npm --version && \
+    \
     # Cleanup temporary files
-    rm -f /tmp/asdf-plugins.txt /tmp/.tool-versions
+    rm -f /tmp/asdf-plugins.txt /tmp/.tool-versions'
 
 # 5.6: Install npm globals using asdf nodejs
 FROM asdftools AS customtools
 
-RUN set -eux && \
+RUN bash -c 'set -eux && \
     # npm globals (nodejs now available from asdf)
-    npm install -g @anthropic-ai/claude-code@latest
+    npm install -g @anthropic-ai/claude-code@latest'
 
 # 6: Create non-root user with appropriate privileges for development
 FROM customtools AS user
@@ -220,7 +233,9 @@ RUN set -eux && \
     groupadd -f docker && \
     usermod -aG docker $USERNAME && \
     echo "$USERNAME ALL=(ALL) NOPASSWD:/usr/bin/apt-get,/usr/bin/docker,/usr/bin/systemctl" > /etc/sudoers.d/$USERNAME && \
-    chmod 0440 /etc/sudoers.d/$USERNAME
+    chmod 0440 /etc/sudoers.d/$USERNAME && \
+    # Fix asdf permissions for vscode user
+    chown -R $USERNAME:$USER_GROUP /opt/asdf
 
 # 7: Custom JIM tweaks
 FROM user AS tweaks

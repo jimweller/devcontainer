@@ -15,12 +15,14 @@ This devcontainer uses a simplified AWS credential approach that works seamlessl
 ### How It Works
 
 **Host Side:**
+
 1. Long-lived SSO session token obtained via `aws sso login --profile mcg`
 2. `scripts/aws-refresh-token.sh` runs via launchd (scheduled job)
 3. Script periodically refreshes temporary token to `~/assets/aws/aws-token.json`
 4. Token stays fresh automatically (runs every 8h, token valid for 12h)
 
 **Container Side:**
+
 1. Host `~/assets` directory mounted read-only to `/home/vscode/assets`
 2. AWS config uses `credential_process = cat $HOME/assets/aws/aws-token.json`
 3. Container reads fresh credentials automatically
@@ -29,19 +31,20 @@ This devcontainer uses a simplified AWS credential approach that works seamlessl
 ### Prerequisites
 
 1. Install and configure `aws-refresh-token.sh` on host:
+
    ```bash
    # One-time SSO login
    aws sso login --profile mcg
-   
+
    # Install launchd job (macOS)
    cp scripts/aws-refresh-token.plist ~/Library/LaunchAgents/
    launchctl load ~/Library/LaunchAgents/com.user.refreshawstoken.plist
-   
+
    # Verify token file exists
    cat ~/assets/aws/aws-token.json
    ```
 
-2. Ensure `dotfiles/aws_config` has the default profile configured
+2. Ensure `dotfiles/aws/aws_config` has the default profile configured
 
 ### Usage
 
@@ -68,15 +71,18 @@ aws s3 ls --profile mcg
 ### Troubleshooting
 
 **No credentials found:**
+
 - Check token file exists: `cat ~/assets/aws/aws-token.json`
 - Verify launchd job running: `launchctl list | grep refreshawstoken`
 - Check refresh log: `cat ~/assets/aws/refresh.log`
 
 **Expired credentials:**
+
 - Ensure SSO session valid: `aws sso login --profile mcg`
 - Check launchd job executed recently: `cat ~/assets/aws/refresh.log`
 
 **Container mount issues:**
+
 - Verify assets directory mounted: `ls -la ~/assets/aws/` (in container)
 - Check devcontainer.json has mount configuration
 
@@ -100,6 +106,7 @@ devc help
 ```
 
 The `devc` command (alias for `scripts/devcontainer.sh`) handles:
+
 - Building the image
 - Managing container lifecycle
 - Auto-installing dotfiles on first connection
@@ -108,6 +115,7 @@ The `devc` command (alias for `scripts/devcontainer.sh`) handles:
 ## Container Mounts
 
 Each container automatically mounts:
+
 - Current directory → `/workspace`
 - Named volume for home directory (persists dotfiles, shell history, etc.)
 - `~/.granted/secure-storage` → `/home/vscode/.granted/secure-storage` (if exists)

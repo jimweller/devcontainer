@@ -13,8 +13,8 @@
     "source=${localEnv:HOME}/assets,target=/home/vscode/assets,type=bind,readonly"
   ],
 
-  // Extract secrets after dotfiles installation
-  "postAttachCommand": "~/.config/dotfiles/scripts/secrets.sh open",
+  // Restore SSH and GPG keys after dotfiles installation. Needs DOTFILES_KEY and sops.
+  "postAttachCommand": "~/.config/dotfiles/scripts/keys.sh init && ~/.config/dotfiles/scripts/keys.sh restore",
 
   // tiny hack to make sure the first terminal is a fully configured shell
   "features": {
